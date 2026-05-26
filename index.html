@@ -6,150 +6,65 @@
     <title>Browser</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            width: 600px; height: 600px; overflow: hidden;
-            background: #000; color: #fff;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            user-select: none;
-        }
+        body { width: 600px; height: 600px; overflow: hidden; background: #000; color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
         .screen { width: 600px; height: 600px; display: none; flex-direction: column; }
         .screen.active { display: flex; }
         #search-screen { align-items: center; justify-content: flex-start; padding: 40px 32px 24px; }
         .logo { font-size: 13px; letter-spacing: 0.15em; color: #666; text-transform: uppercase; margin-bottom: 32px; }
-        .url-display {
-            width: 100%; background: #111; border: 1.5px solid #333; border-radius: 8px;
-            padding: 12px 16px; font-size: 18px; color: #fff; min-height: 52px;
-            margin-bottom: 20px; letter-spacing: 0.04em; display: flex; align-items: center; gap: 4px;
-        }
-        .url-display .cursor {
-            display: inline-block; width: 2px; height: 22px; background: #00d4ff;
-            animation: blink 1s step-end infinite; vertical-align: middle; flex-shrink: 0;
-        }
+        .url-display { width: 100%; background: #111; border: 1.5px solid #333; border-radius: 8px; padding: 12px 16px; font-size: 18px; color: #fff; min-height: 52px; margin-bottom: 20px; letter-spacing: 0.04em; display: flex; align-items: center; gap: 4px; }
+        .url-display .cursor { display: inline-block; width: 2px; height: 22px; background: #00d4ff; animation: blink 1s step-end infinite; vertical-align: middle; flex-shrink: 0; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         .keyboard { width: 100%; display: flex; flex-direction: column; gap: 6px; }
         .kb-row { display: flex; gap: 5px; justify-content: center; }
-        .key {
-            height: 44px; min-width: 44px; padding: 0 6px;
-            background: #1a1a1a; border: 1.5px solid #333; border-radius: 6px;
-            color: #e0e0e0; font-size: 15px; font-weight: 500;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: background 100ms, border-color 100ms; flex-shrink: 0;
-        }
+        .key { height: 44px; min-width: 44px; padding: 0 6px; background: #1a1a1a; border: 1.5px solid #333; border-radius: 6px; color: #e0e0e0; font-size: 15px; font-weight: 500; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 100ms, border-color 100ms; flex-shrink: 0; }
         .key.wide { min-width: 72px; font-size: 13px; }
         .key.space { flex: 1; max-width: 200px; }
-        .key:focus, .key.focused {
-            outline: none; background: #1e3a4a; border-color: #00d4ff;
-            color: #fff; box-shadow: 0 0 0 2px rgba(0,212,255,0.25);
-        }
+        .key:focus, .key.focused { outline: none; background: #1e3a4a; border-color: #00d4ff; color: #fff; box-shadow: 0 0 0 2px rgba(0,212,255,0.25); }
         .action-row { display: flex; gap: 8px; width: 100%; margin-top: 10px; }
-        .action-btn {
-            flex: 1; height: 44px; border-radius: 8px; border: 1.5px solid #333;
-            background: #111; color: #aaa; font-size: 13px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 100ms;
-        }
-        .action-btn:focus, .action-btn.focused {
-            outline: none; background: #1e3a4a; border-color: #00d4ff;
-            color: #fff; box-shadow: 0 0 0 2px rgba(0,212,255,0.25);
-        }
+        .action-btn { flex: 1; height: 44px; border-radius: 8px; border: 1.5px solid #333; background: #111; color: #aaa; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 100ms; }
+        .action-btn:focus, .action-btn.focused { outline: none; background: #1e3a4a; border-color: #00d4ff; color: #fff; box-shadow: 0 0 0 2px rgba(0,212,255,0.25); }
         .action-btn.go { background: #00d4ff22; border-color: #00d4ff88; color: #00d4ff; }
         .action-btn.go:focus, .action-btn.go.focused { background: #00d4ff44; border-color: #00d4ff; color: #fff; }
         #loading-screen { align-items: center; justify-content: center; gap: 20px; }
-        .spinner {
-            width: 48px; height: 48px; border: 3px solid #222;
-            border-top-color: #00d4ff; border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
+        .spinner { width: 48px; height: 48px; border: 3px solid #222; border-top-color: #00d4ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-url { font-size: 13px; color: #555; max-width: 480px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #result-screen { flex-direction: column; }
-        .result-topbar {
-            height: 40px; background: #0a0a0a; border-bottom: 1px solid #1a1a1a;
-            display: flex; align-items: center; padding: 0 12px; gap: 8px; flex-shrink: 0;
-        }
+        .result-topbar { height: 40px; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; padding: 0 12px; gap: 8px; flex-shrink: 0; }
         .result-domain { font-size: 12px; color: #666; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .back-btn {
-            font-size: 12px; color: #00d4ff; cursor: pointer; padding: 4px 10px;
-            border: 1px solid #00d4ff44; border-radius: 4px; background: transparent; flex-shrink: 0;
-        }
+        .back-btn { font-size: 12px; color: #00d4ff; cursor: pointer; padding: 4px 10px; border: 1px solid #00d4ff44; border-radius: 4px; background: transparent; flex-shrink: 0; }
         .back-btn:focus, .back-btn.focused { outline: none; background: #00d4ff22; border-color: #00d4ff; }
         .result-content { flex: 1; overflow: hidden; position: relative; }
         .result-iframe { width: 100%; height: 100%; border: none; background: #fff; }
-        .scroll-hint {
-            position: absolute; bottom: 12px; right: 12px; background: #000a;
-            color: #666; font-size: 11px; padding: 4px 8px; border-radius: 4px; pointer-events: none;
-        }
+        .scroll-hint { position: absolute; bottom: 12px; right: 12px; background: #000a; color: #666; font-size: 11px; padding: 4px 8px; border-radius: 4px; pointer-events: none; }
         #error-screen { align-items: center; justify-content: center; gap: 16px; padding: 40px; text-align: center; }
         .error-icon { font-size: 48px; }
         .error-msg { font-size: 16px; color: #ff6b6b; }
         .error-sub { font-size: 13px; color: #555; }
-        .retry-btn {
-            margin-top: 8px; padding: 10px 28px;
-            background: #ff6b6b22; border: 1.5px solid #ff6b6b88;
-            border-radius: 8px; color: #ff6b6b; font-size: 14px; cursor: pointer;
-        }
+        .retry-btn { margin-top: 8px; padding: 10px 28px; background: #ff6b6b22; border: 1.5px solid #ff6b6b88; border-radius: 8px; color: #ff6b6b; font-size: 14px; cursor: pointer; }
         .retry-btn:focus, .retry-btn.focused { outline: none; background: #ff6b6b44; border-color: #ff6b6b; }
     </style>
 </head>
 <body>
 
-<!-- SEARCH SCREEN -->
 <div id="search-screen" class="screen active">
     <div class="logo">Browser</div>
-    <div class="url-display" id="url-display">
-        <span id="input-text"></span><span class="cursor"></span>
-    </div>
-    <div class="keyboard" id="keyboard">
+    <div class="url-display"><span id="input-text"></span><span class="cursor"></span></div>
+    <div class="keyboard">
         <div class="kb-row" id="row0">
-            <div class="key focusable" data-char="1">1</div>
-            <div class="key focusable" data-char="2">2</div>
-            <div class="key focusable" data-char="3">3</div>
-            <div class="key focusable" data-char="4">4</div>
-            <div class="key focusable" data-char="5">5</div>
-            <div class="key focusable" data-char="6">6</div>
-            <div class="key focusable" data-char="7">7</div>
-            <div class="key focusable" data-char="8">8</div>
-            <div class="key focusable" data-char="9">9</div>
-            <div class="key focusable" data-char="0">0</div>
+            <div class="key focusable" data-char="1">1</div><div class="key focusable" data-char="2">2</div><div class="key focusable" data-char="3">3</div><div class="key focusable" data-char="4">4</div><div class="key focusable" data-char="5">5</div><div class="key focusable" data-char="6">6</div><div class="key focusable" data-char="7">7</div><div class="key focusable" data-char="8">8</div><div class="key focusable" data-char="9">9</div><div class="key focusable" data-char="0">0</div>
         </div>
         <div class="kb-row" id="row1">
-            <div class="key focusable" data-char="q">q</div>
-            <div class="key focusable" data-char="w">w</div>
-            <div class="key focusable" data-char="e">e</div>
-            <div class="key focusable" data-char="r">r</div>
-            <div class="key focusable" data-char="t">t</div>
-            <div class="key focusable" data-char="y">y</div>
-            <div class="key focusable" data-char="u">u</div>
-            <div class="key focusable" data-char="i">i</div>
-            <div class="key focusable" data-char="o">o</div>
-            <div class="key focusable" data-char="p">p</div>
+            <div class="key focusable" data-char="q">q</div><div class="key focusable" data-char="w">w</div><div class="key focusable" data-char="e">e</div><div class="key focusable" data-char="r">r</div><div class="key focusable" data-char="t">t</div><div class="key focusable" data-char="y">y</div><div class="key focusable" data-char="u">u</div><div class="key focusable" data-char="i">i</div><div class="key focusable" data-char="o">o</div><div class="key focusable" data-char="p">p</div>
         </div>
         <div class="kb-row" id="row2">
-            <div class="key focusable" data-char="a">a</div>
-            <div class="key focusable" data-char="s">s</div>
-            <div class="key focusable" data-char="d">d</div>
-            <div class="key focusable" data-char="f">f</div>
-            <div class="key focusable" data-char="g">g</div>
-            <div class="key focusable" data-char="h">h</div>
-            <div class="key focusable" data-char="j">j</div>
-            <div class="key focusable" data-char="k">k</div>
-            <div class="key focusable" data-char="l">l</div>
+            <div class="key focusable" data-char="a">a</div><div class="key focusable" data-char="s">s</div><div class="key focusable" data-char="d">d</div><div class="key focusable" data-char="f">f</div><div class="key focusable" data-char="g">g</div><div class="key focusable" data-char="h">h</div><div class="key focusable" data-char="j">j</div><div class="key focusable" data-char="k">k</div><div class="key focusable" data-char="l">l</div>
         </div>
         <div class="kb-row" id="row3">
-            <div class="key focusable wide" data-action="del">⌫ Del</div>
-            <div class="key focusable" data-char="z">z</div>
-            <div class="key focusable" data-char="x">x</div>
-            <div class="key focusable" data-char="c">c</div>
-            <div class="key focusable" data-char="v">v</div>
-            <div class="key focusable" data-char="b">b</div>
-            <div class="key focusable" data-char="n">n</div>
-            <div class="key focusable" data-char="m">m</div>
-            <div class="key focusable wide" data-action="clear">✕ Clr</div>
+            <div class="key focusable wide" data-action="del">⌫ Del</div><div class="key focusable" data-char="z">z</div><div class="key focusable" data-char="x">x</div><div class="key focusable" data-char="c">c</div><div class="key focusable" data-char="v">v</div><div class="key focusable" data-char="b">b</div><div class="key focusable" data-char="n">n</div><div class="key focusable" data-char="m">m</div><div class="key focusable wide" data-action="clear">✕ Clr</div>
         </div>
         <div class="kb-row" id="row4">
-            <div class="key focusable" data-char=".">.</div>
-            <div class="key focusable space" data-char=" ">Space</div>
-            <div class="key focusable" data-char="-">-</div>
+            <div class="key focusable" data-char=".">.</div><div class="key focusable space" data-char=" ">Space</div><div class="key focusable" data-char="-">-</div>
         </div>
     </div>
     <div class="action-row">
@@ -158,27 +73,23 @@
     </div>
 </div>
 
-<!-- LOADING SCREEN -->
 <div id="loading-screen" class="screen">
     <div class="spinner"></div>
     <div style="font-size:15px; color:#aaa;">Suche & lade Seite...</div>
     <div class="loading-url" id="loading-url"></div>
 </div>
 
-<!-- RESULT SCREEN -->
 <div id="result-screen" class="screen">
     <div class="result-topbar">
         <div class="result-domain" id="result-domain"></div>
         <button class="back-btn focusable" id="btn-back">← Zurück</button>
     </div>
     <div class="result-content">
-        <iframe class="result-iframe" id="result-iframe"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-top-navigation"></iframe>
+        <iframe class="result-iframe" id="result-iframe" sandbox="allow-scripts allow-forms"></iframe>
         <div class="scroll-hint">↑↓ scrollen</div>
     </div>
 </div>
 
-<!-- ERROR SCREEN -->
 <div id="error-screen" class="screen">
     <div class="error-icon">⚠️</div>
     <div class="error-msg" id="error-msg">Fehler beim Laden</div>
@@ -188,10 +99,15 @@
 
 <script>
     const PROXY = 'https://browser-mrbd.duckdns.org';
-
     let inputText = '';
     let currentFocusIdx = 0;
     let currentScreen = 'search';
+
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'navigate') {
+            showResult(e.data.url);
+        }
+    });
 
     function showScreen(name) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -202,9 +118,7 @@
         if (name === 'error') setTimeout(() => document.getElementById('btn-retry').focus(), 50);
     }
 
-    function updateDisplay() {
-        document.getElementById('input-text').textContent = inputText;
-    }
+    function updateDisplay() { document.getElementById('input-text').textContent = inputText; }
 
     function getFocusables() {
         return Array.from(document.getElementById(currentScreen + '-screen').querySelectorAll('.focusable'));
@@ -237,17 +151,11 @@
             moveFocusLinear(dir === 'left' ? 'prev' : 'next');
             return;
         }
-
         const rows = ['row0','row1','row2','row3','row4'];
         const els = getFocusables();
         let currentEl = els.find(el => el.classList.contains('focused')) || els[0];
         const isAction = currentEl && (currentEl.id === 'btn-go' || currentEl.id === 'btn-clear-all');
-
-        if (dir === 'left' || dir === 'right') {
-            moveFocusLinear(dir === 'left' ? 'prev' : 'next');
-            return;
-        }
-
+        if (dir === 'left' || dir === 'right') { moveFocusLinear(dir === 'left' ? 'prev' : 'next'); return; }
         let currentRowIdx = -1, currentColIdx = 0;
         for (let ri = 0; ri < rows.length; ri++) {
             const row = document.getElementById(rows[ri]);
@@ -256,7 +164,6 @@
             const ci = rowEls.indexOf(currentEl);
             if (ci !== -1) { currentRowIdx = ri; currentColIdx = ci; break; }
         }
-
         if (isAction) {
             if (dir === 'up') {
                 const lastRowEls = Array.from(document.getElementById('row4').querySelectorAll('.focusable'));
@@ -266,17 +173,10 @@
             }
             return;
         }
-
         if (currentRowIdx === -1) return;
         let nextRowIdx = dir === 'down' ? currentRowIdx + 1 : currentRowIdx - 1;
-
-        if (nextRowIdx >= rows.length) {
-            const idx = els.indexOf(document.getElementById('btn-go'));
-            if (idx !== -1) focusIdx(idx);
-            return;
-        }
+        if (nextRowIdx >= rows.length) { const idx = els.indexOf(document.getElementById('btn-go')); if (idx !== -1) focusIdx(idx); return; }
         if (nextRowIdx < 0) return;
-
         const nextRowEls = Array.from(document.getElementById(rows[nextRowIdx]).querySelectorAll('.focusable'));
         const target = nextRowEls[Math.min(currentColIdx, nextRowEls.length - 1)];
         const idx = els.indexOf(target);
@@ -287,10 +187,8 @@
         const els = getFocusables();
         const el = els.find(e => e.classList.contains('focused'));
         if (!el) return;
-
         const char = el.dataset.char;
         const action = el.dataset.action;
-
         if (char !== undefined) { inputText += char; updateDisplay(); return; }
         if (action === 'del') { inputText = inputText.slice(0, -1); updateDisplay(); return; }
         if (action === 'clear' || el.id === 'btn-clear-all') { inputText = ''; updateDisplay(); return; }
@@ -316,11 +214,7 @@
     }
 
     function showResult(url) {
-        try {
-            document.getElementById('result-domain').textContent = new URL(url).hostname;
-        } catch(e) {
-            document.getElementById('result-domain').textContent = url;
-        }
+        try { document.getElementById('result-domain').textContent = new URL(url).hostname; } catch(e) { document.getElementById('result-domain').textContent = url; }
         document.getElementById('result-iframe').src = `${PROXY}/fetch?url=${encodeURIComponent(url)}`;
         showScreen('result');
     }
@@ -332,9 +226,7 @@
             case 'ArrowUp':    moveFocus2D('up');    e.preventDefault(); break;
             case 'ArrowDown':  moveFocus2D('down');  e.preventDefault(); break;
             case 'Enter':      activateFocused();    e.preventDefault(); break;
-            case 'Escape':
-                if (currentScreen !== 'search') showScreen('search');
-                e.preventDefault(); break;
+            case 'Escape': if (currentScreen !== 'search') showScreen('search'); e.preventDefault(); break;
         }
     });
 
