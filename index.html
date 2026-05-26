@@ -587,12 +587,16 @@
   }
 
   function showResult(html, url) {
-    try {
-      const domain = new URL(url).hostname;
-      document.getElementById('result-domain').textContent = domain;
-    } catch(e) {
-      document.getElementById('result-domain').textContent = url;
-    }
+      try {
+          const domain = new URL(url).hostname;
+          document.getElementById('result-domain').textContent = domain;
+      } catch(e) {
+          document.getElementById('result-domain').textContent = url;
+      }
+      const iframe = document.getElementById('result-iframe');
+      iframe.src = `${PROXY}/fetch?url=${encodeURIComponent(url)}`;
+      showScreen('result');
+  }
 
     const iframe = document.getElementById('result-iframe');
 
