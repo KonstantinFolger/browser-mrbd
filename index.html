@@ -25,6 +25,8 @@
         .action-btn:focus, .action-btn.focused { outline: none; background: #1e3a4a; border-color: #00d4ff; color: #fff; box-shadow: 0 0 0 2px rgba(0,212,255,0.25); }
         .action-btn.go { background: #00d4ff22; border-color: #00d4ff88; color: #00d4ff; }
         .action-btn.go:focus, .action-btn.go.focused { background: #00d4ff44; border-color: #00d4ff; color: #fff; }
+        .action-btn.vid { background: #ff6b9d22; border-color: #ff6b9d88; color: #ff6b9d; }
+        .action-btn.vid:focus, .action-btn.vid.focused { background: #ff6b9d44; border-color: #ff6b9d; color: #fff; }
         #loading-screen { align-items: center; justify-content: center; gap: 20px; }
         .spinner { width: 48px; height: 48px; border: 3px solid #222; border-top-color: #00d4ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -43,6 +45,16 @@
         .error-sub { font-size: 13px; color: #555; }
         .retry-btn { margin-top: 8px; padding: 10px 28px; background: #ff6b6b22; border: 1.5px solid #ff6b6b88; border-radius: 8px; color: #ff6b6b; font-size: 14px; cursor: pointer; }
         .retry-btn:focus, .retry-btn.focused { outline: none; background: #ff6b6b44; border-color: #ff6b6b; }
+        #video-screen { flex-direction: column; background: #000; }
+        .video-topbar { height: 40px; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; padding: 0 12px; gap: 8px; flex-shrink: 0; }
+        .video-title { font-size: 11px; color: #666; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .video-wrap { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; }
+        #main-video { width: 600px; height: 480px; background: #000; }
+        .video-controls { height: 80px; background: #0a0a0a; display: flex; align-items: center; justify-content: center; gap: 12px; flex-shrink: 0; padding: 0 16px; }
+        .ctrl-btn { height: 44px; padding: 0 20px; background: #1a1a1a; border: 1.5px solid #333; border-radius: 8px; color: #e0e0e0; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .ctrl-btn:focus, .ctrl-btn.focused { outline: none; background: #1e3a4a; border-color: #00d4ff; color: #fff; box-shadow: 0 0 0 2px rgba(0,212,255,0.25); }
+        .ctrl-btn.next { background: #ff6b9d22; border-color: #ff6b9d88; color: #ff6b9d; }
+        .ctrl-btn.next:focus, .ctrl-btn.next.focused { background: #ff6b9d44; border-color: #ff6b9d; color: #fff; }
     </style>
 </head>
 <body>
@@ -68,14 +80,15 @@
         </div>
     </div>
     <div class="action-row">
-        <div class="action-btn focusable go" id="btn-go" data-action="go">🔍 Suchen</div>
-        <div class="action-btn focusable" id="btn-clear-all" data-action="clear">✕ Löschen</div>
+        <div class="action-btn focusable go" id="btn-go" data-action="go">🔍 Web</div>
+        <div class="action-btn focusable vid" id="btn-vid" data-action="vid">▶ Video</div>
+        <div class="action-btn focusable" id="btn-clear-all" data-action="clear">✕</div>
     </div>
 </div>
 
 <div id="loading-screen" class="screen">
     <div class="spinner"></div>
-    <div style="font-size:15px; color:#aaa;">Suche & lade Seite...</div>
+    <div style="font-size:15px; color:#aaa;">Lädt...</div>
     <div class="loading-url" id="loading-url"></div>
 </div>
 
@@ -90,6 +103,20 @@
     </div>
 </div>
 
+<div id="video-screen" class="screen">
+    <div class="video-topbar">
+        <div class="video-title" id="video-title"></div>
+        <button class="back-btn focusable" id="btn-video-back">← Zurück</button>
+    </div>
+    <div class="video-wrap">
+        <video id="main-video" controls autoplay playsinline></video>
+    </div>
+    <div class="video-controls">
+        <div class="ctrl-btn focusable" id="btn-playpause">⏸ Pause</div>
+        <div class="ctrl-btn focusable next" id="btn-next">⏭ Nächstes</div>
+    </div>
+</div>
+
 <div id="error-screen" class="screen">
     <div class="error-icon">⚠️</div>
     <div class="error-msg" id="error-msg">Fehler beim Laden</div>
@@ -97,16 +124,17 @@
     <button class="retry-btn focusable" id="btn-retry">← Zurück</button>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
 <script>
     const PROXY = 'https://browser-mrbd.duckdns.org';
     let inputText = '';
     let currentFocusIdx = 0;
     let currentScreen = 'search';
+    let currentVideoQuery = '';
+    let hlsInstance = null;
 
     window.addEventListener('message', (e) => {
-        if (e.data && e.data.type === 'navigate') {
-            showResult(e.data.url);
-        }
+        if (e.data && e.data.type === 'navigate') showResult(e.data.url);
     });
 
     function showScreen(name) {
@@ -115,6 +143,7 @@
         currentScreen = name;
         if (name === 'search') setTimeout(() => focusIdx(0), 50);
         if (name === 'result') setTimeout(() => { document.getElementById('btn-back').focus(); currentFocusIdx = 0; }, 100);
+        if (name === 'video') setTimeout(() => { document.getElementById('btn-playpause').focus(); currentFocusIdx = 0; }, 100);
         if (name === 'error') setTimeout(() => document.getElementById('btn-retry').focus(), 50);
     }
 
@@ -154,7 +183,7 @@
         const rows = ['row0','row1','row2','row3','row4'];
         const els = getFocusables();
         let currentEl = els.find(el => el.classList.contains('focused')) || els[0];
-        const isAction = currentEl && (currentEl.id === 'btn-go' || currentEl.id === 'btn-clear-all');
+        const isAction = currentEl && ['btn-go','btn-vid','btn-clear-all'].includes(currentEl.id);
         if (dir === 'left' || dir === 'right') { moveFocusLinear(dir === 'left' ? 'prev' : 'next'); return; }
         let currentRowIdx = -1, currentColIdx = 0;
         for (let ri = 0; ri < rows.length; ri++) {
@@ -193,7 +222,10 @@
         if (action === 'del') { inputText = inputText.slice(0, -1); updateDisplay(); return; }
         if (action === 'clear' || el.id === 'btn-clear-all') { inputText = ''; updateDisplay(); return; }
         if (action === 'go' || el.id === 'btn-go') { doSearch(); return; }
-        if (el.id === 'btn-back' || el.id === 'btn-retry') { showScreen('search'); return; }
+        if (action === 'vid' || el.id === 'btn-vid') { doVideo(); return; }
+        if (el.id === 'btn-back' || el.id === 'btn-retry' || el.id === 'btn-video-back') { stopVideo(); showScreen('search'); return; }
+        if (el.id === 'btn-playpause') { togglePlay(); return; }
+        if (el.id === 'btn-next') { doVideo(); return; }
     }
 
     async function doSearch() {
@@ -213,6 +245,54 @@
         }
     }
 
+    async function doVideo() {
+        const query = inputText.trim() || currentVideoQuery;
+        if (!query) return;
+        currentVideoQuery = query;
+        document.getElementById('loading-url').textContent = '▶ Suche Video: ' + query;
+        showScreen('loading');
+        try {
+            const res = await fetch(`${PROXY}/video?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            playVideo(data.hlsUrl, data.title);
+        } catch (err) {
+            document.getElementById('error-msg').textContent = 'Video nicht gefunden';
+            document.getElementById('error-sub').textContent = err.message;
+            showScreen('error');
+        }
+    }
+
+    function playVideo(hlsUrl, title) {
+        const video = document.getElementById('main-video');
+        document.getElementById('video-title').textContent = title || '';
+        stopVideo();
+        if (Hls.isSupported()) {
+            hlsInstance = new Hls();
+            hlsInstance.loadSource(hlsUrl);
+            hlsInstance.attachMedia(video);
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = hlsUrl;
+            video.play();
+        }
+        showScreen('video');
+    }
+
+    function stopVideo() {
+        const video = document.getElementById('main-video');
+        if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+        video.pause();
+        video.src = '';
+    }
+
+    function togglePlay() {
+        const video = document.getElementById('main-video');
+        const btn = document.getElementById('btn-playpause');
+        if (video.paused) { video.play(); btn.textContent = '⏸ Pause'; }
+        else { video.pause(); btn.textContent = '▶ Play'; }
+    }
+
     function showResult(url) {
         try { document.getElementById('result-domain').textContent = new URL(url).hostname; } catch(e) { document.getElementById('result-domain').textContent = url; }
         document.getElementById('result-iframe').src = `${PROXY}/fetch?url=${encodeURIComponent(url)}`;
@@ -226,7 +306,7 @@
             case 'ArrowUp':    moveFocus2D('up');    e.preventDefault(); break;
             case 'ArrowDown':  moveFocus2D('down');  e.preventDefault(); break;
             case 'Enter':      activateFocused();    e.preventDefault(); break;
-            case 'Escape': if (currentScreen !== 'search') showScreen('search'); e.preventDefault(); break;
+            case 'Escape': if (currentScreen !== 'search') { stopVideo(); showScreen('search'); } e.preventDefault(); break;
         }
     });
 
