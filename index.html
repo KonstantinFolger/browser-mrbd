@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+  <title>Browser</title>
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAABEklEQVR4nO2YQQqDMBBF34VepDdpL9CzFHoWD2CvIIiHKNiDuHMhZBNCMolJJoX3YMBFMn+SmUwCQRAEwf8B2AFn4ARcgJukXpImaZSUSVolqZekXpJmadKqpFWSeklqJWmWJq1KWiWpl6RWkmZp0qqkVZJ6SWolaZYmrUpaJamXpFaSZmnSqqRVknpJaiVpliatSlolqZekVpJmadKqpFWSeklqJWmWJq1KWiWpl6RWkmZp0qqkVZJ6SWolaZYmrUpaJamXpFaSZmnSqqRVknpJaiVpliauSlolqZekVpJmadKqpFWSeklqJWmWJq1KWiWpl6RWkmZp0qqkVZJ6SWolaZYmrUpaJamXpFaSZmnSqqRVBEEQBMEH3gBTVE1mAAAAAElFTkSuQmCC">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 600px;
+      height: 600px;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      user-select: none;
+    }
+
+    /* ── SCREENS ── */
+    .screen { width: 600px; height: 600px; display: none; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* ── SEARCH SCREEN ── */
+    #search-screen {
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 32px 24px;
+      gap: 0;
+    }
+
+    .logo {
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .url-display {
+      width: 100%;
+      background: #111;
+      border: 1.5px solid #333;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 18px;
+      color: #fff;
+      min-height: 52px;
+      margin-bottom: 20px;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .url-display .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 22px;
+      background: #00d4ff;
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── KEYBOARD ── */
+    .keyboard { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+
+    .kb-row { display: flex; gap: 5px; justify-content: center; }
+
+    .key {
+      height: 44px;
+      min-width: 44px;
+      padding: 0 6px;
+      background: #1a1a1a;
+      border: 1.5px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 100ms, border-color 100ms;
+      flex-shrink: 0;
+    }
+
+    .key.wide { min-width: 72px; font-size: 13px; }
+    .key.space { flex: 1; max-width: 200px; }
+
+    .key:focus, .key.focused {
+      outline: none;
+      background: #1e3a4a;
+      border-color: #00d4ff;
+      color: #fff;
+      box-shadow: 0 0 0 2px rgba(0,212,255,0.25);
+    }
+
+    /* ── ACTION ROW ── */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .action-btn {
+      flex: 1;
+      height: 44px;
+      border-radius: 8px;
+      border: 1.5px solid #333;
+      background: #111;
+      color: #aaa;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 100ms;
+    }
+
+    .action-btn:focus, .action-btn.focused {
+      outline: none;
+      background: #1e3a4a;
+      border-color: #00d4ff;
+      color: #fff;
+      box-shadow: 0 0 0 2px rgba(0,212,255,0.25);
+    }
+
+    .action-btn.go {
+      background: #00d4ff22;
+      border-color: #00d4ff88;
+      color: #00d4ff;
+    }
+
+    .action-btn.go:focus, .action-btn.go.focused {
+      background: #00d4ff44;
+      border-color: #00d4ff;
+      color: #fff;
+    }
+
+    /* ── LOADING SCREEN ── */
+    #loading-screen {
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #222;
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-url {
+      font-size: 13px;
+      color: #555;
+      max-width: 480px;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── RESULT SCREEN ── */
+    #result-screen { flex-direction: column; }
+
+    .result-topbar {
+      height: 40px;
+      background: #0a0a0a;
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .result-domain {
+      font-size: 12px;
+      color: #666;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .back-btn {
+      font-size: 12px;
+      color: #00d4ff;
+      cursor: pointer;
+      padding: 4px 10px;
+      border: 1px solid #00d4ff44;
+      border-radius: 4px;
+      background: transparent;
+      flex-shrink: 0;
+    }
+
+    .back-btn:focus, .back-btn.focused {
+      outline: none;
+      background: #00d4ff22;
+      border-color: #00d4ff;
+    }
+
+    .result-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .result-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    /* sandbox overlay to intercept scroll */
+    .scroll-hint {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: #000a;
+      color: #666;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* ── ERROR SCREEN ── */
+    #error-screen {
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .error-icon { font-size: 48px; }
+    .error-msg { font-size: 16px; color: #ff6b6b; }
+    .error-sub { font-size: 13px; color: #555; }
+
+    .retry-btn {
+      margin-top: 8px;
+      padding: 10px 28px;
+      background: #ff6b6b22;
+      border: 1.5px solid #ff6b6b88;
+      border-radius: 8px;
+      color: #ff6b6b;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .retry-btn:focus, .retry-btn.focused {
+      outline: none;
+      background: #ff6b6b44;
+      border-color: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SEARCH SCREEN -->
+<div id="search-screen" class="screen active">
+  <div class="logo">Browser</div>
+
+  <div class="url-display" id="url-display">
+    <span id="input-text"></span><span class="cursor"></span>
+  </div>
+
+  <div class="keyboard" id="keyboard">
+    <div class="kb-row" id="row0">
+      <div class="key focusable" data-char="1">1</div>
+      <div class="key focusable" data-char="2">2</div>
+      <div class="key focusable" data-char="3">3</div>
+      <div class="key focusable" data-char="4">4</div>
+      <div class="key focusable" data-char="5">5</div>
+      <div class="key focusable" data-char="6">6</div>
+      <div class="key focusable" data-char="7">7</div>
+      <div class="key focusable" data-char="8">8</div>
+      <div class="key focusable" data-char="9">9</div>
+      <div class="key focusable" data-char="0">0</div>
+    </div>
+    <div class="kb-row" id="row1">
+      <div class="key focusable" data-char="q">q</div>
+      <div class="key focusable" data-char="w">w</div>
+      <div class="key focusable" data-char="e">e</div>
+      <div class="key focusable" data-char="r">r</div>
+      <div class="key focusable" data-char="t">t</div>
+      <div class="key focusable" data-char="y">y</div>
+      <div class="key focusable" data-char="u">u</div>
+      <div class="key focusable" data-char="i">i</div>
+      <div class="key focusable" data-char="o">o</div>
+      <div class="key focusable" data-char="p">p</div>
+    </div>
+    <div class="kb-row" id="row2">
+      <div class="key focusable" data-char="a">a</div>
+      <div class="key focusable" data-char="s">s</div>
+      <div class="key focusable" data-char="d">d</div>
+      <div class="key focusable" data-char="f">f</div>
+      <div class="key focusable" data-char="g">g</div>
+      <div class="key focusable" data-char="h">h</div>
+      <div class="key focusable" data-char="j">j</div>
+      <div class="key focusable" data-char="k">k</div>
+      <div class="key focusable" data-char="l">l</div>
+    </div>
+    <div class="kb-row" id="row3">
+      <div class="key focusable wide" data-action="del">⌫ Del</div>
+      <div class="key focusable" data-char="z">z</div>
+      <div class="key focusable" data-char="x">x</div>
+      <div class="key focusable" data-char="c">c</div>
+      <div class="key focusable" data-char="v">v</div>
+      <div class="key focusable" data-char="b">b</div>
+      <div class="key focusable" data-char="n">n</div>
+      <div class="key focusable" data-char="m">m</div>
+      <div class="key focusable wide" data-action="clear">✕ Clr</div>
+    </div>
+    <div class="kb-row" id="row4">
+      <div class="key focusable" data-char=".">.</div>
+      <div class="key focusable space" data-char=" ">Space</div>
+      <div class="key focusable" data-char="-">-</div>
+    </div>
+  </div>
+
+  <div class="action-row">
+    <div class="action-btn focusable go" id="btn-go" data-action="go">🔍 Suchen</div>
+    <div class="action-btn focusable" id="btn-clear-all" data-action="clear">✕ Löschen</div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen" class="screen">
+  <div class="spinner"></div>
+  <div style="font-size:15px; color:#aaa;">Suche & lade Seite...</div>
+  <div class="loading-url" id="loading-url"></div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="result-screen" class="screen">
+  <div class="result-topbar">
+    <div class="result-domain" id="result-domain"></div>
+    <button class="back-btn focusable" id="btn-back">← Zurück</button>
+  </div>
+  <div class="result-content">
+    <iframe class="result-iframe" id="result-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+    <div class="scroll-hint">↑↓ scrollen</div>
+  </div>
+</div>
+
+<!-- ERROR SCREEN -->
+<div id="error-screen" class="screen">
+  <div class="error-icon">⚠️</div>
+  <div class="error-msg" id="error-msg">Fehler beim Laden</div>
+  <div class="error-sub" id="error-sub"></div>
+  <button class="retry-btn focusable" id="btn-retry">← Zurück</button>
+</div>
+
+<script>
+  // ── CONFIG ──
+  const PROXY = 'http://152.239.113.77:3000';
+
+  // ── STATE ──
+  let inputText = '';
+  let currentFocusIdx = 0;
+  let currentScreen = 'search';
+  let scrollTarget = null;
+
+  // ── SCREEN MANAGEMENT ──
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(name + '-screen').classList.add('active');
+    currentScreen = name;
+    if (name === 'search') {
+      setTimeout(() => focusIdx(0), 50);
+    }
+    if (name === 'result') {
+      setTimeout(() => {
+        document.getElementById('btn-back').focus();
+        currentFocusIdx = 0;
+      }, 100);
+    }
+    if (name === 'error') {
+      setTimeout(() => {
+        document.getElementById('btn-retry').focus();
+      }, 50);
+    }
+  }
+
+  // ── INPUT DISPLAY ──
+  function updateDisplay() {
+    document.getElementById('input-text').textContent = inputText;
+  }
+
+  // ── FOCUSABLES ──
+  function getFocusables() {
+    const screen = document.getElementById(currentScreen + '-screen');
+    return Array.from(screen.querySelectorAll('.focusable'));
+  }
+
+  function focusIdx(idx) {
+    const els = getFocusables();
+    if (!els.length) return;
+    idx = Math.max(0, Math.min(idx, els.length - 1));
+    currentFocusIdx = idx;
+    els.forEach((el, i) => {
+      el.classList.toggle('focused', i === idx);
+    });
+    els[idx].focus();
+  }
+
+  function moveFocusLinear(dir) {
+    const els = getFocusables();
+    if (!els.length) return;
+    let idx = els.findIndex(el => el.classList.contains('focused'));
+    if (idx === -1) idx = 0;
+
+    if (dir === 'next') idx = (idx + 1) % els.length;
+    else idx = (idx - 1 + els.length) % els.length;
+
+    focusIdx(idx);
+  }
+
+  // 2D grid navigation for keyboard rows
+  function moveFocus2D(dir) {
+    if (currentScreen !== 'search') {
+      if (dir === 'up' || dir === 'down') {
+        // scroll iframe
+        const iframe = document.getElementById('result-iframe');
+        try {
+          iframe.contentWindow.scrollBy(0, dir === 'down' ? 120 : -120);
+        } catch(e) {}
+        return;
+      }
+      if (dir === 'left') moveFocusLinear('prev');
+      if (dir === 'right') moveFocusLinear('next');
+      return;
+    }
+
+    const rows = ['row0','row1','row2','row3','row4'];
+    const actionRowIds = ['btn-go','btn-clear-all'];
+
+    // Find current element
+    const els = getFocusables();
+    let currentEl = els.find(el => el.classList.contains('focused'));
+    if (!currentEl && els.length) currentEl = els[0];
+
+    const isAction = currentEl && (currentEl.id === 'btn-go' || currentEl.id === 'btn-clear-all');
+
+    if (dir === 'left' || dir === 'right') {
+      moveFocusLinear(dir === 'left' ? 'prev' : 'next');
+      return;
+    }
+
+    if (dir === 'down' || dir === 'up') {
+      // Find which row current element is in
+      let currentRowIdx = -1;
+      let currentColIdx = 0;
+
+      for (let ri = 0; ri < rows.length; ri++) {
+        const row = document.getElementById(rows[ri]);
+        if (!row) continue;
+        const rowEls = Array.from(row.querySelectorAll('.focusable'));
+        const ci = rowEls.indexOf(currentEl);
+        if (ci !== -1) {
+          currentRowIdx = ri;
+          currentColIdx = ci;
+          break;
+        }
+      }
+
+      if (isAction) {
+        if (dir === 'up') {
+          // go to last keyboard row
+          const lastRow = document.getElementById('row4');
+          const lastRowEls = Array.from(lastRow.querySelectorAll('.focusable'));
+          const target = lastRowEls[Math.min(currentFocusIdx % lastRowEls.length, lastRowEls.length - 1)];
+          const idx = els.indexOf(target);
+          if (idx !== -1) focusIdx(idx);
+        }
+        return;
+      }
+
+      if (currentRowIdx === -1) return;
+
+      let nextRowIdx = dir === 'down' ? currentRowIdx + 1 : currentRowIdx - 1;
+
+      if (nextRowIdx >= rows.length) {
+        // move to action row
+        const goBtn = document.getElementById('btn-go');
+        const idx = els.indexOf(goBtn);
+        if (idx !== -1) focusIdx(idx);
+        return;
+      }
+
+      if (nextRowIdx < 0) return;
+
+      const nextRow = document.getElementById(rows[nextRowIdx]);
+      if (!nextRow) return;
+      const nextRowEls = Array.from(nextRow.querySelectorAll('.focusable'));
+      const targetCol = Math.min(currentColIdx, nextRowEls.length - 1);
+      const target = nextRowEls[targetCol];
+      const idx = els.indexOf(target);
+      if (idx !== -1) focusIdx(idx);
+    }
+  }
+
+  // ── KEY PRESS HANDLER ──
+  function activateFocused() {
+    const els = getFocusables();
+    const el = els.find(e => e.classList.contains('focused'));
+    if (!el) return;
+
+    const char = el.dataset.char;
+    const action = el.dataset.action;
+
+    if (char !== undefined) {
+      inputText += char;
+      updateDisplay();
+      return;
+    }
+
+    if (action === 'del') {
+      inputText = inputText.slice(0, -1);
+      updateDisplay();
+      return;
+    }
+
+    if (action === 'clear') {
+      inputText = '';
+      updateDisplay();
+      return;
+    }
+
+    if (action === 'go' || el.id === 'btn-go') {
+      doSearch();
+      return;
+    }
+
+    if (el.id === 'btn-back' || el.id === 'btn-retry') {
+      showScreen('search');
+      return;
+    }
+  }
+
+  // ── SEARCH & FETCH ──
+  async function doSearch() {
+    const query = inputText.trim();
+    if (!query) return;
+
+    document.getElementById('loading-url').textContent = 'Suche: ' + query;
+    showScreen('loading');
+
+    try {
+      // Step 1: search
+      const searchRes = await fetch(`${PROXY}/search?q=${encodeURIComponent(query)}`);
+      const searchData = await searchRes.json();
+
+      if (!searchData.url) throw new Error('Keine Ergebnisse gefunden');
+
+      const targetUrl = searchData.url;
+      document.getElementById('loading-url').textContent = targetUrl;
+
+      // Step 2: fetch page
+      const fetchRes = await fetch(`${PROXY}/fetch?url=${encodeURIComponent(targetUrl)}`);
+      const fetchData = await fetchRes.json();
+
+      if (fetchData.error) throw new Error(fetchData.error);
+
+      // Step 3: display
+      showResult(fetchData.html, targetUrl);
+
+    } catch (err) {
+      document.getElementById('error-msg').textContent = 'Fehler beim Laden';
+      document.getElementById('error-sub').textContent = err.message;
+      showScreen('error');
+    }
+  }
+
+  function showResult(html, url) {
+    try {
+      const domain = new URL(url).hostname;
+      document.getElementById('result-domain').textContent = domain;
+    } catch(e) {
+      document.getElementById('result-domain').textContent = url;
+    }
+
+    const iframe = document.getElementById('result-iframe');
+
+    // Inject minimal styles for dark/readable display
+    const styledHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=600">
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        background: #0d0d0d;
+        color: #e0e0e0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 16px;
+        margin: 0;
+        max-width: 600px;
+      }
+      a { color: #00d4ff; text-decoration: none; }
+      img { max-width: 100%; height: auto; border-radius: 4px; }
+      h1,h2,h3,h4 { color: #fff; margin: 12px 0 6px; font-weight: 600; }
+      h1 { font-size: 20px; }
+      h2 { font-size: 17px; }
+      h3 { font-size: 15px; }
+      p { margin: 0 0 10px; }
+      ul,ol { padding-left: 20px; margin: 0 0 10px; }
+      pre,code { background: #1a1a1a; border-radius: 4px; padding: 2px 6px; font-size: 12px; }
+      pre { padding: 12px; overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      td,th { border: 1px solid #222; padding: 6px 8px; }
+      th { background: #1a1a1a; }
+      video { max-width: 100%; border-radius: 4px; }
+    </style>
+    </head>
+    <body>${html}</body>
+    </html>
+  `;
+
+    const blob = new Blob([styledHtml], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    iframe.src = blobUrl;
+
+    showScreen('result');
+  }
+
+  // ── GLOBAL KEYDOWN ──
+  document.addEventListener('keydown', function(e) {
+    switch(e.key) {
+      case 'ArrowLeft':  moveFocus2D('left');  e.preventDefault(); break;
+      case 'ArrowRight': moveFocus2D('right'); e.preventDefault(); break;
+      case 'ArrowUp':    moveFocus2D('up');    e.preventDefault(); break;
+      case 'ArrowDown':  moveFocus2D('down');  e.preventDefault(); break;
+      case 'Enter':      activateFocused();    e.preventDefault(); break;
+      case 'Escape':
+        if (currentScreen !== 'search') showScreen('search');
+        e.preventDefault();
+        break;
+    }
+  });
+
+  // ── INIT ──
+  showScreen('search');
+</script>
+</body>
+</html>
